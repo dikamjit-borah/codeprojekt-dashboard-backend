@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const logger = require("./utils/logger");
+const { requestIdMiddleware, responseFormatter } = require("./middlewares/requestHandler");
 
 const app = express();
 
@@ -18,6 +19,10 @@ app.use(limiter);
 // body parser with size limit
 app.use(express.json({ limit: '100kb' }));
 
+// Request tracking and response formatting middleware
+app.use(requestIdMiddleware);
+app.use(responseFormatter);
+
 const v1Router = express.Router();
 // const applyAuth = require("./middlewares/auth");
 
@@ -29,11 +34,23 @@ app.use("/v1", v1Router);
 v1Router.use('/transactions', require('./routes/transactions'));
 
 // Error handler — keep this last
+// Error handling middleware
 app.use((err, req, res, next) => {
-  req.log && req.log.error ? req.log.error(err) : console.error(err);
-  const status = err.status || 500;
-  res.status(status).json({ error: err.message || 'Internal Server Error' });
+  logger.error(err.message ?? "Internal Server Error",
+    {
+      requestId: req.requestId,
+      error: err.message,
+      stack: err.stack,
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+    },
+
+  );
+
+  res.error(err.status || 500, err.message || "Internal Server Error")
 });
+
 
 const PORT = process.env.PORT || 8001;
 async function initializeApp() {
