@@ -1,15 +1,12 @@
+require("dotenv").config();
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-const pino = require('pino');
-const pinoHttp = require('pino-http');
+const logger = require("./utils/logger");
 
 const app = express();
 
-// Logger
-const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
-app.use(pinoHttp({ logger }));
 app.use(helmet());
 app.use(cors());
 const limiter = rateLimit({
@@ -29,7 +26,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/v1", v1Router);
-app.use('/transactions', require('./routes/transactions'));
+v1Router.use('/transactions', require('./routes/transactions'));
 
 // Error handler — keep this last
 app.use((err, req, res, next) => {
@@ -38,6 +35,34 @@ app.use((err, req, res, next) => {
   res.status(status).json({ error: err.message || 'Internal Server Error' });
 });
 
-app.listen(8001, () => {
-  logger.info(`Server listening on port ${8001}`);
-});
+const PORT = process.env.PORT || 8001;
+async function initializeApp() {
+  try {
+    const db = require("./providers/mongo");
+    await db.connect();
+    return true;
+  } catch (error) {
+    logger.error(`Failed to initialize application: ${error.message}`);
+    return false;
+  }
+}
+
+(async () => {
+  const server = app.listen(PORT, async () => {
+    const initialized = await initializeApp();
+    if (!initialized) {
+      logger.error("Application initialization failed. Shutting down server.");
+      server.close(() => {
+        process.exit(1);
+      });
+    } else {
+      logger.info(
+        `Server running on port ${PORT}, Environment: ${process.env.NODE_ENV}`
+      );
+      const config = require(`./config/${process.env.NODE_ENV}.js`);
+
+      logger.info("Loaded application configuration", config);
+
+    }
+  });
+})();
