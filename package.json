@@ -5,15 +5,22 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "stage": "nodemon server.js"
+    "stage": "SET NODE_ENV=stage&&nodemon server.js",
+    "prod": "SET NODE_ENV=prod&&node server.js",
+    "stage-unix": "NODE_ENV=stage nodemon server.js",
+    "prod-unix": "NODE_ENV=prod node server.js"
   },
   "dependencies": {
-    "express": "^5.1.0",
-    "helmet": "^8.1.0",
+    "config": "^4.1.1",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
     "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "mongodb": "^6.20.0",
     "pino": "^9.13.0",
-    "pino-http": "^10.5.0"
+    "pino-http": "^10.5.0",
+    "pino-pretty": "^13.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
