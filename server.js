@@ -31,7 +31,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/v1", v1Router);
-v1Router.use('/transactions', require('./routes/transactions'));
+v1Router.use('/dashboard', require('./routes/dashboard'));
 
 // Error handler — keep this last
 // Error handling middleware

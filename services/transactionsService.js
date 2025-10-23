@@ -21,7 +21,7 @@ async function transactions(options = {}) {
         status,
         substatus,
         page = 1,
-        limit = 20,
+        limit = 10,
     } = options;
 
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
