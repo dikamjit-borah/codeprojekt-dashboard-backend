@@ -2,13 +2,13 @@ const transactionsService = require('../services/transactionsService');
 
 async function transactions(req, res, next) {
     try {
-        const { startDate, endDate, status, substatus, page, limit } = req.query;
+        const { startDate, endDate, status, subStatus, page, limit } = req.query;
 
         const transactions = await transactionsService.transactions({
             startDate,
             endDate,
             status,
-            substatus,
+            subStatus,
             page,
             limit,
         });

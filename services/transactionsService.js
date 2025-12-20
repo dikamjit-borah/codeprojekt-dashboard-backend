@@ -7,7 +7,7 @@ const mongo = require('../providers/mongo');
  *  - startDate (ISO string)
  *  - endDate (ISO string)
  *  - status (string)
- *  - substatus (string)
+ *  - subStatus (string)
  *  - page (number, defaults to 1)
  *  - limit (number, defaults to 20)
  *
@@ -19,7 +19,7 @@ async function transactions(options = {}) {
         startDate,
         endDate,
         status,
-        substatus,
+        subStatus,
         page = 1,
         limit = 10,
     } = options;
@@ -48,7 +48,7 @@ async function transactions(options = {}) {
     }
 
     if (status) match.status = status;
-    if (substatus) match.substatus = substatus;
+    if (subStatus) match.subStatus = subStatus;
 
     const pipeline = [];
     if (Object.keys(match).length > 0) pipeline.push({ $match: match });
@@ -69,7 +69,7 @@ async function transactions(options = {}) {
             ],
         },
     });
-
+    console.log(JSON.stringify(pipeline, null, 2));
     const aggResult = await mongo.aggregate('transactions', pipeline);
 
     const facet = (aggResult && aggResult[0]) || { data: [], totalCount: [] };
