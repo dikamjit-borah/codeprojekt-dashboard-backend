@@ -3,5 +3,6 @@ const router = express.Router();
 const transactionsController = require('../controllers/transactionsController');
 
 router.get('/transactions', transactionsController.transactions);
+router.get('/monthly-analytics', transactionsController.monthlyAnalytics);
 
 module.exports = router;

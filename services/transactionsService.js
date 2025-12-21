@@ -84,6 +84,100 @@ async function transactions(options = {}) {
     };
 }
 
+async function getMonthlyAnalytics(options = {}) {
+    const now = new Date();
+    const providedMonth = options.month ? parseInt(options.month, 10) : null; // 1-12 if provided
+    const providedYear = options.year ? parseInt(options.year, 10) : null;
+
+    const y = !isNaN(providedYear) ? providedYear : now.getUTCFullYear();
+    const mIndex = !isNaN(providedMonth) ? Math.min(12, Math.max(1, providedMonth)) - 1 : now.getUTCMonth(); // 0-11
+
+    const startOfMonth = new Date(Date.UTC(y, mIndex, 1, 0, 0, 0, 0));
+    const startOfNextMonth = new Date(Date.UTC(y, mIndex + 1, 1, 0, 0, 0, 0));
+    return {
+        monthlyFinancials: await getMonthlyFinancials(startOfMonth, startOfNextMonth),
+        monthlyUserAnalytics: await getMonthlyUserAnalytics(startOfMonth, startOfNextMonth),
+    }
+}
+
+async function getMonthlyFinancials(startOfMonth, startOfNextMonth) {
+    const pipeline = [
+        {
+            // Filter only required month + successful transactions
+            $match: {
+                status: "success",
+                createdAt: {
+                    $gte: startOfMonth,
+                    $lt: startOfNextMonth
+                }
+            }
+        },
+        {
+            // Convert string prices to numbers
+            $project: {
+                sellAmountInINR: {
+                    $toDouble: "$paymentResponse.amount"
+                },
+                costAmountInSmileCoins: {
+                    $toDouble: "$vendorResponse.price"
+                }
+            }
+        },
+        {
+            // Aggregate
+            $group: {
+                _id: null,
+                totalSellPriceInINR: { $sum: "$sellAmountInINR" },
+                totalCostPriceInSmileCoins: { $sum: "$costAmountInSmileCoins" },
+                totalSales: { $sum: 1 }
+            }
+        }
+    ];
+
+    const aggResult = await mongo.aggregate('transactions', pipeline);
+    let monthlyFinancials
+    if (aggResult && aggResult[0]) {
+        monthlyFinancials = {
+            ...aggResult[0],
+            totalCostPriceInBRR: aggResult[0].totalCostPriceInSmileCoins / 10, // 1 BRR = 10 Smile Coins
+            totalCostPriceInINR: (monthlyFinancials.totalCostPriceInBRR) * 16.6 // 1 BRR = 16.6 INR
+        }
+    }
+    return monthlyFinancials;
+}
+
+async function getMonthlyUserAnalytics(startOfMonth, startOfNextMonth) {
+    const pipeline = [
+        {
+            // Filter only required month
+            $match: {
+                createdAt: {
+                    $gte: startOfMonth,
+                    $lt: startOfNextMonth
+                }
+            }
+        },
+        {
+            // Project profile field and count total documents
+            $group: {
+                _id: null,
+                profile: { $push: "$profile" },
+                totalDocuments: { $sum: 1 }
+            }
+        }
+    ];
+
+    const aggResult = await mongo.aggregate('users', pipeline);
+    let monthlyUserAnalytics
+    if (aggResult && aggResult[0]) {
+        monthlyUserAnalytics = { ...aggResult[0] };
+    }
+    return monthlyUserAnalytics;
+}
+
 module.exports = {
     transactions,
+    getMonthlyAnalytics,
+    getMonthlyFinancials,
+    getMonthlyUserAnalytics,
 };
