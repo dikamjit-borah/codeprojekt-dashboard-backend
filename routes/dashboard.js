@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const transactionsController = require('../controllers/transactionsController');
+const dashboardController = require('../controllers/dashboardController');
 
-router.get('/transactions', transactionsController.transactions);
-router.get('/monthly-analytics', transactionsController.monthlyAnalytics);
+router.get('/transactions', dashboardController.transactions);
+router.get('/monthly-analytics', dashboardController.monthlyAnalytics);
 
 module.exports = router;

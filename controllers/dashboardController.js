@@ -1,10 +1,10 @@
-const transactionsService = require('../services/transactionsService');
+const dashboardService = require('../services/dashboardService');
 
 async function transactions(req, res, next) {
     try {
         const { startDate, endDate, status, subStatus, page, limit } = req.query;
 
-        const transactions = await transactionsService.transactions({
+        const transactions = await dashboardService.transactions({
             startDate,
             endDate,
             status,
@@ -33,7 +33,7 @@ async function monthlyAnalytics(req, res, next) {
         const y = year ? parseInt(year, 10) : now.getUTCFullYear();
         const m = month ? parseInt(month, 10) : (now.getUTCMonth() + 1); // 1-12
 
-        const result = await transactionsService.getMonthlyAnalytics({ month: m, year: y });
+        const result = await dashboardService.getMonthlyAnalytics({ month: m, year: y });
 
         res.success(200, "Monthly analytics fetched successfully", {
             month: m,
