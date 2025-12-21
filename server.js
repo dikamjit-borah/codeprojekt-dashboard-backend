@@ -30,6 +30,8 @@ app.get("/health", (req, res) => {
   res.json({ status: 'healthy' });
 });
 
+app.use("/auth", require('./routes/auth'));
+
 app.use("/v1", v1Router);
 v1Router.use('/dashboard', require('./routes/dashboard'));
 
