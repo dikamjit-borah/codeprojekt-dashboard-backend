@@ -126,7 +126,7 @@ async function getMonthlyFinancials(startOfMonth, startOfNextMonth) {
         {
             // Aggregate
             $group: {
-                _id: null,
+                _id: `${startOfMonth}${startOfNextMonth}`, // dummy id to get single doc,
                 totalSellPriceInINR: { $sum: "$sellAmountInINR" },
                 totalCostPriceInSmileCoins: { $sum: "$costAmountInSmileCoins" },
                 totalSales: { $sum: 1 }
@@ -137,10 +137,11 @@ async function getMonthlyFinancials(startOfMonth, startOfNextMonth) {
     const aggResult = await mongo.aggregate('transactions', pipeline);
     let monthlyFinancials
     if (aggResult && aggResult[0]) {
+        const totalCostPriceInBRR = aggResult[0].totalCostPriceInSmileCoins / 10; // 1 BRR = 10 Smile Coins
         monthlyFinancials = {
             ...aggResult[0],
-            totalCostPriceInBRR: aggResult[0].totalCostPriceInSmileCoins / 10, // 1 BRR = 10 Smile Coins
-            totalCostPriceInINR: (monthlyFinancials.totalCostPriceInBRR) * 16.6 // 1 BRR = 16.6 INR
+            totalCostPriceInBRR,
+            totalCostPriceInINR: totalCostPriceInBRR * 16.6 // 1 BRR = 16.6 INR
         }
     }
     return monthlyFinancials;
@@ -160,7 +161,7 @@ async function getMonthlyUserAnalytics(startOfMonth, startOfNextMonth) {
         {
             // Project profile field and count total documents
             $group: {
-                _id: null,
+                _id: `${startOfMonth}${startOfNextMonth}`, // dummy id to get single doc
                 profile: { $push: "$profile" },
                 totalDocuments: { $sum: 1 }
             }
