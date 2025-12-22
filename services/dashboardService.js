@@ -21,7 +21,7 @@ async function transactions(options = {}) {
         endDate,
         status,
         subStatus,
-        transactionId,
+        search,
         page = 1,
         limit = 10,
     } = options;
@@ -51,7 +51,7 @@ async function transactions(options = {}) {
 
     if (status) match.status = status;
     if (subStatus) match.subStatus = subStatus;
-    if (transactionId) match.transactionId = { $regex: transactionId, $options: 'i' };
+    if (search) match.transactionId = { $regex: search, $options: 'i' };
 
     const pipeline = [];
     if (Object.keys(match).length > 0) pipeline.push({ $match: match });
