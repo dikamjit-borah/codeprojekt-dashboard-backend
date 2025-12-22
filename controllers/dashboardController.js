@@ -2,13 +2,14 @@ const dashboardService = require('../services/dashboardService');
 
 async function transactions(req, res, next) {
     try {
-        const { startDate, endDate, status, subStatus, page, limit } = req.query;
+        const { startDate, endDate, status, subStatus, transactionId, page, limit } = req.query;
 
         const transactions = await dashboardService.transactions({
             startDate,
             endDate,
             status,
             subStatus,
+            transactionId,
             page,
             limit,
         });

@@ -8,6 +8,7 @@ const mongo = require('../providers/mongo');
  *  - endDate (ISO string)
  *  - status (string)
  *  - subStatus (string)
+ *  - transactionId (string) - searches the transactionId field
  *  - page (number, defaults to 1)
  *  - limit (number, defaults to 20)
  *
@@ -20,6 +21,7 @@ async function transactions(options = {}) {
         endDate,
         status,
         subStatus,
+        transactionId,
         page = 1,
         limit = 10,
     } = options;
@@ -49,6 +51,7 @@ async function transactions(options = {}) {
 
     if (status) match.status = status;
     if (subStatus) match.subStatus = subStatus;
+    if (transactionId) match.transactionId = { $regex: transactionId, $options: 'i' };
 
     const pipeline = [];
     if (Object.keys(match).length > 0) pipeline.push({ $match: match });
