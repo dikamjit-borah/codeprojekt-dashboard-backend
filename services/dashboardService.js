@@ -97,10 +97,18 @@ async function getMonthlyAnalytics(options = {}) {
 
     const startOfMonth = new Date(Date.UTC(y, mIndex, 1, 0, 0, 0, 0));
     const startOfNextMonth = new Date(Date.UTC(y, mIndex + 1, 1, 0, 0, 0, 0));
+    const [monthlyFinancials, monthlyUserAnalytics] = await Promise.all([
+        getMonthlyFinancials(startOfMonth, startOfNextMonth),
+        getMonthlyUserAnalytics(startOfMonth, startOfNextMonth)
+    ]);
+
+    const { profile, ...userAnalyticsWithoutProfile } = monthlyUserAnalytics || {};
+
     return {
-        monthlyFinancials: await getMonthlyFinancials(startOfMonth, startOfNextMonth),
-        monthlyUserAnalytics: await getMonthlyUserAnalytics(startOfMonth, startOfNextMonth),
-    }
+        monthlyFinancials,
+        monthlyUserAnalytics: userAnalyticsWithoutProfile
+    };
+
 }
 
 async function getMonthlyFinancials(startOfMonth, startOfNextMonth) {
@@ -129,7 +137,7 @@ async function getMonthlyFinancials(startOfMonth, startOfNextMonth) {
         {
             // Aggregate
             $group: {
-                _id: `${startOfMonth}${startOfNextMonth}`, // dummy id to get single doc,
+                _id: `${startOfMonth}`, // dummy id to get single doc,
                 totalSellPriceInINR: { $sum: "$sellAmountInINR" },
                 totalCostPriceInSmileCoins: { $sum: "$costAmountInSmileCoins" },
                 totalSales: { $sum: 1 }
@@ -164,9 +172,9 @@ async function getMonthlyUserAnalytics(startOfMonth, startOfNextMonth) {
         {
             // Project profile field and count total documents
             $group: {
-                _id: `${startOfMonth}${startOfNextMonth}`, // dummy id to get single doc
+                _id: `${startOfMonth}`, // dummy id to get single doc
                 profile: { $push: "$profile" },
-                totalDocuments: { $sum: 1 }
+                totalUsers: { $sum: 1 }
             }
         }
     ];
