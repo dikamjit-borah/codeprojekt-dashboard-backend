@@ -148,11 +148,17 @@ async function getMonthlyFinancials(startOfMonth, startOfNextMonth) {
     const aggResult = await mongo.aggregate('transactions', pipeline);
     let monthlyFinancials
     if (aggResult && aggResult[0]) {
-        const totalCostPriceInBRR = aggResult[0].totalCostPriceInSmileCoins / 10; // 1 BRR = 10 Smile Coins
+        const { totalSales, totalCostPriceInSmileCoins, totalSellPriceInINR } = aggResult[0];
+        const totalCostPriceInBRR = totalCostPriceInSmileCoins / 10; // 1 BRR = 10 Smile Coins
+        const totalCostPriceInINR = totalCostPriceInBRR * 16.6 // 1 BRR = 16.6 INR
+        const netProfitOrLossInINR = totalSellPriceInINR - totalCostPriceInINR;
         monthlyFinancials = {
-            ...aggResult[0],
+            totalSales,
+            totalCostPriceInSmileCoins,
             totalCostPriceInBRR,
-            totalCostPriceInINR: totalCostPriceInBRR * 16.6 // 1 BRR = 16.6 INR
+            totalCostPriceInINR,
+            totalSellPriceInINR,
+            netProfitOrLossInINR
         }
     }
     return monthlyFinancials;
