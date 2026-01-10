@@ -125,12 +125,23 @@ async function getMonthlyFinancials(startOfMonth, startOfNextMonth) {
         },
         {
             // Convert string prices to numbers
+            // Handle both single vendorResponse.price and array of vendorResponses[].price
             $project: {
                 sellAmountInINR: {
                     $toDouble: "$paymentResponse.amount"
                 },
                 costAmountInSmileCoins: {
-                    $toDouble: "$vendorResponse.price"
+                    $cond: {
+                        if: { $isArray: "$vendorResponses" },
+                        then: {
+                            $reduce: {
+                                input: "$vendorResponses",
+                                initialValue: 0,
+                                in: { $add: ["$$value", { $toDouble: "$$this.price" }] }
+                            }
+                        },
+                        else: { $toDouble: "$vendorResponse.price" }
+                    }
                 }
             }
         },
