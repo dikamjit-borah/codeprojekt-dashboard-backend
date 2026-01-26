@@ -47,7 +47,18 @@ async function monthlyAnalytics(req, res, next) {
     }
 }
 
+async function getUsers(req, res, next) {
+    try {
+        const { page = 1, limit = 10, search } = req.query;
+        const result = await dashboardService.getUsers({ page, limit, search });
+        res.success(200, "Users fetched successfully", result);
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     transactions,
     monthlyAnalytics,
+    getUsers,
 };

@@ -1,4 +1,3 @@
-
 const mongo = require('../providers/mongo');
 
 /**
@@ -204,9 +203,45 @@ async function getMonthlyUserAnalytics(startOfMonth, startOfNextMonth) {
     return monthlyUserAnalytics;
 }
 
+async function getUsers({ page = 1, limit = 10, search }) {
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const pageLimit = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+    const skip = (pageNum - 1) * pageLimit;
+    const match = {};
+    if (search) {
+        match['profile.name'] = { $regex: search, $options: 'i' };
+    }
+    const pipeline = [];
+    if (Object.keys(match).length > 0) pipeline.push({ $match: match });
+    pipeline.push({
+        $facet: {
+            data: [
+                { $sort: { createdAt: -1 } },
+                { $project: { profile: 1 } },
+                { $skip: skip },
+                { $limit: pageLimit }
+            ],
+            totalCount: [
+                { $count: 'count' }
+            ]
+        }
+    });
+    const aggResult = await mongo.aggregate('users', pipeline);
+    const facet = (aggResult && aggResult[0]) || { data: [], totalCount: [] };
+    const data = facet.data || [];
+    const total = (facet.totalCount && facet.totalCount[0] && facet.totalCount[0].count) || 0;
+    return {
+        data,
+        page: pageNum,
+        limit: pageLimit,
+        total,
+    };
+}
+
 module.exports = {
     transactions,
     getMonthlyAnalytics,
     getMonthlyFinancials,
     getMonthlyUserAnalytics,
+    getUsers,
 };
